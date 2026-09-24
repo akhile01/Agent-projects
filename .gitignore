@@ -1,0 +1,33 @@
+# Environment variables & Secrets (CRITICAL)
+.env
+*.env
+*.env.*
+!.env.example
+weatherstackapi*.txt
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Vector databases & temporary storage
+vector_db/
+vector_db_*/
+*.chroma/
+.gradio/
+
+# Node / Web dependencies
+node_modules/
+dist/
+package-lock.json
+
+# Operating system files
+.DS_Store
+Thumbs.db

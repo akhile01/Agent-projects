@@ -1,0 +1,9 @@
+gradio>=5.0.0
+langchain>=0.3.0
+langchain-classic
+langchain-community
+langchain-chroma
+langchain-google-genai
+langchain-groq
+pypdf
+python-dotenv
