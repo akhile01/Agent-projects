@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scholarship AI Suite & RAG Advisor 2025</title>
+  <meta name="description" content="AI-powered Scholarship discovery, grant calculator, and statement of purpose generator.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-badge">2025 PORTAL</div>
+        <h1>🎓 Scholarship AI Suite</h1>
+        <p class="subtitle">Intelligent RAG Assistant • Instant Grant Calculator • AI Statement of Purpose Drafter</p>
+      </div>
+      <div class="header-tags">
+        <span class="tag live-tag"><span class="dot"></span> Live AI Connected</span>
+        <span class="tag">NSP Portal Compliant</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-chat" id="tabBtnChat">
+        <span class="tab-icon">💬</span>
+        <span>Smart Q&A</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-calc" id="tabBtnCalc">
+        <span class="tab-icon">⚡</span>
+        <span>Eligibility & Grant Calculator</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-sop" id="tabBtnSop">
+        <span class="tab-icon">✍️</span>
+        <span>AI SOP Drafter</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: Smart Q&A -->
+    <section class="tab-content active" id="tab-chat">
+      <div class="card glass-card">
+        <div class="card-header">
+          <h2>Ask Anything About Scholarship 2025</h2>
+          <p>Answers synthesized directly from official documentation with source verification.</p>
+        </div>
+
+        <div class="quick-questions">
+          <span class="quick-label">Popular Questions:</span>
+          <button class="chip" onclick="setQuery('What are the eligibility criteria for the scholarship?')">Eligibility criteria?</button>
+          <button class="chip" onclick="setQuery('What documents are required to apply?')">Documents required?</button>
+          <button class="chip" onclick="setQuery('What is the scholarship amount and book allowance?')">Benefits & allowances?</button>
+          <button class="chip" onclick="setQuery('What is the deadline and where do I apply?')">Deadline & link?</button>
+        </div>
+
+        <div class="input-group">
+          <textarea id="chatInput" placeholder="Type your scholarship question here... (e.g. Can postgraduate students apply? What is the family income limit?)" rows="3"></textarea>
+          <div class="input-actions">
+            <button id="askBtn" class="btn btn-primary" onclick="submitChat()">
+              <span id="askBtnText">Ask AI Assistant</span>
+              <span id="askSpinner" class="spinner hidden"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="chatResponseArea" class="response-card hidden">
+          <div class="response-header">
+            <span class="badge">Official AI Guidance</span>
+            <button class="btn-copy" onclick="copyText('chatAnswer')">Copy</button>
+          </div>
+          <div id="chatAnswer" class="response-body"></div>
+          <div id="chatSources" class="response-sources"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Calculator -->
+    <section class="tab-content" id="tab-calc">
+      <div class="grid-2col">
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>Candidate Assessment Form</h2>
+            <p>Input your academic and family background for instant evaluation.</p>
+          </div>
+
+          <form id="calcForm" onsubmit="event.preventDefault(); submitCalc();">
+            <div class="form-group">
+              <label for="degreeSelect">Current Academic Level</label>
+              <select id="degreeSelect">
+                <option value="Undergraduate" selected>Undergraduate (B.Tech, B.Sc, B.Com, etc.)</option>
+                <option value="Postgraduate">Postgraduate (M.Tech, M.Sc, MBA, etc.)</option>
+                <option value="Diploma">Diploma / Polytechnic</option>
+                <option value="High School">High School (12th Grade)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="incomeRange">Annual Family Income</label>
+                <span class="val-badge" id="incomeVal">₹3,50,000</span>
+              </div>
+              <input type="range" id="incomeRange" min="50000" max="1200000" step="25000" value="350000" oninput="updateIncome(this.value)">
+              <div class="range-labels">
+                <span>₹50k</span>
+                <span class="limit-marker">Limit: ₹6 Lakh</span>
+                <span>₹12 Lakh+</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="marksRange">Last Qualifying Exam Marks</label>
+                <span class="val-badge" id="marksVal">75.0%</span>
+              </div>
+              <input type="range" id="marksRange" min="40" max="100" step="0.5" value="75.0" oninput="updateMarks(this.value)">
+              <div class="range-labels">
+                <span>40%</span>
+                <span class="limit-marker">Required: ≥ 60%</span>
+                <span>100%</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Course Duration</label>
+              <div class="radio-pills">
+                <label><input type="radio" name="courseYears" value="1"> 1 Yr</label>
+                <label><input type="radio" name="courseYears" value="2"> 2 Yrs</label>
+                <label><input type="radio" name="courseYears" value="3"> 3 Yrs</label>
+                <label><input type="radio" name="courseYears" value="4" checked> 4 Yrs (B.Tech)</label>
+                <label><input type="radio" name="courseYears" value="5"> 5 Yrs</label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Check Available Documents</label>
+              <div class="checkbox-grid">
+                <label><input type="checkbox" id="docIncome" checked> Income Certificate</label>
+                <label><input type="checkbox" id="docAadhaar" checked> Aadhaar Card</label>
+                <label><input type="checkbox" id="docPassbook"> Bank Passbook</label>
+                <label><input type="checkbox" id="docMarksheet" checked> Academic Marksheet</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="calcBtn">
+              <span>Calculate Grant & Check Eligibility</span>
+            </button>
+          </form>
+        </div>
+
+        <div class="card glass-card" id="calcResultCard">
+          <div class="card-header">
+            <h2>Eligibility Verdict & Financial Aid</h2>
+            <p>Real-time calculation based on official 2025 guidelines.</p>
+          </div>
+          <div id="calcEmptyState" class="empty-state">
+            <span class="empty-icon">📊</span>
+            <p>Click "Calculate Grant & Check Eligibility" to view your personalized award assessment and grant valuation.</p>
+          </div>
+          <div id="calcResultContent" class="calc-results hidden">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SOP Drafter -->
+    <section class="tab-content" id="tab-sop">
+      <div class="grid-2col">
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>Applicant Profile Details</h2>
+            <p>Fill in your background to generate a persuasive, committee-ready SOP.</p>
+          </div>
+
+          <form id="sopForm" onsubmit="event.preventDefault(); submitSop();">
+            <div class="form-group">
+              <label for="sopName">Full Name</label>
+              <input type="text" id="sopName" placeholder="e.g. Akhil Sharma" required>
+            </div>
+
+            <div class="form-group">
+              <label for="sopCourse">Course & Institution</label>
+              <input type="text" id="sopCourse" placeholder="e.g. B.Tech Computer Science, National Institute of Technology" required>
+            </div>
+
+            <div class="form-group">
+              <label for="sopBackground">Financial Context & Background</label>
+              <textarea id="sopBackground" rows="3" placeholder="e.g. Single-parent household, father is a farmer, annual income below threshold, struggling to finance tuition and technical books."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="sopGoals">Career Vision & Social Impact</label>
+              <textarea id="sopGoals" rows="3" placeholder="e.g. Aiming to specialize in AI and open-source systems to solve real-world problems in education and rural healthcare."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="sopTone">Writing Style</label>
+              <select id="sopTone">
+                <option value="Professional & Sincere" selected>Professional & Sincere</option>
+                <option value="Passionate & Inspiring">Passionate & Inspiring</option>
+                <option value="Academic & Focused">Academic & Focused</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="sopBtn">
+              <span id="sopBtnText">Generate Statement of Purpose</span>
+              <span id="sopSpinner" class="spinner hidden"></span>
+            </button>
+          </form>
+        </div>
+
+        <div class="card glass-card">
+          <div class="card-header">
+            <div class="header-flex">
+              <h2>Drafted Statement of Purpose</h2>
+              <button class="btn-copy" id="sopCopyBtn" onclick="copyText('sopOutput')" disabled>Copy Text</button>
+            </div>
+            <p>Ready to submit to the National Scholarship Portal.</p>
+          </div>
+
+          <div id="sopEmpty" class="empty-state">
+            <span class="empty-icon">✍️</span>
+            <p>Your personalized essay will appear here once generated.</p>
+          </div>
+
+          <div id="sopOutput" class="sop-body hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>© 2025 Scholarship AI Suite • Designed for high-impact educational access • Powered by Groq & LangChain</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

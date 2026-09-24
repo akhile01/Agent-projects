@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerPilot AI - Your Digital Career Assistant</title>
+  <meta name="description" content="AI Career Coach, Resume Q&A, Job Description Analyzer, and Mock Interview Simulator.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ambient-mesh mesh-1"></div>
+  <div class="ambient-mesh mesh-2"></div>
+
+  <div class="app-layout">
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-pill">AI CAREER COPILOT</div>
+        <h1>🚀 CareerPilot AI</h1>
+        <p class="tagline">Resume Intelligence • Job Description Analyzer • Mock Interview Simulator</p>
+      </div>
+      <div class="nav-badges">
+        <span class="status-indicator"><span class="pulse"></span> Engine Ready</span>
+        <span class="model-badge">Groq Llama 3.3 70B</span>
+      </div>
+    </header>
+
+    <nav class="navigation-bar" role="tablist">
+      <button class="nav-item active" data-tab="tab-chat">
+        <span class="icon">💬</span>
+        <span>Candidate Assistant</span>
+      </button>
+      <button class="nav-item" data-tab="tab-jd">
+        <span class="icon">🎯</span>
+        <span>JD & ATS Analyzer</span>
+      </button>
+      <button class="nav-item" data-tab="tab-interview">
+        <span class="icon">🎙️</span>
+        <span>Mock Interview</span>
+      </button>
+      <button class="nav-item" data-tab="tab-coach">
+        <span class="icon">🧭</span>
+        <span>Career Coaching</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: Chat Assistant -->
+    <main class="tab-pane active" id="tab-chat">
+      <div class="panel glass-panel">
+        <div class="panel-header">
+          <h2>Ask CareerPilot AI</h2>
+          <p>Query projects, architecture experience, and technical capabilities.</p>
+        </div>
+
+        <div class="prompt-chips">
+          <button class="chip" onclick="setChatPrompt('Tell me about yourself and your core engineering expertise.')">Tell me about yourself</button>
+          <button class="chip" onclick="setChatPrompt('What are your key AI voice agent and automation projects?')">Key AI Projects</button>
+          <button class="chip" onclick="setChatPrompt('What tech stack and frameworks are you proficient in?')">Tech Stack</button>
+          <button class="chip" onclick="setChatPrompt('How do you approach building scalable RAG pipelines with ChromaDB?')">RAG Architecture</button>
+        </div>
+
+        <div class="input-card">
+          <textarea id="chatInput" placeholder="Ask about candidate projects, skills, or system design approaches..." rows="3"></textarea>
+          <div class="input-footer">
+            <button class="btn btn-action" id="chatBtn" onclick="sendChat()">
+              <span id="chatBtnLabel">Send Inquiry</span>
+              <span id="chatSpinner" class="loader hidden"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="chatResultCard" class="result-box hidden">
+          <div class="result-top">
+            <span class="result-badge">AI Synthesis</span>
+            <button class="btn-sm" onclick="copyContent('chatOutput')">Copy</button>
+          </div>
+          <div id="chatOutput" class="markdown-body"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- TAB 2: JD Analyzer -->
+    <section class="tab-pane" id="tab-jd">
+      <div class="panel glass-panel">
+        <div class="panel-header">
+          <h2>Job Description & ATS Compatibility Scanner</h2>
+          <p>Paste any job description to extract required skills, keyword match rate, and strategic resume recommendations.</p>
+        </div>
+
+        <div class="input-card">
+          <textarea id="jdInput" placeholder="Paste full job description here (e.g. Seeking an AI Engineer with expertise in Python, LangChain, RAG, Docker, FastAPI, and AWS...)" rows="6"></textarea>
+          <div class="input-footer">
+            <button class="btn btn-action" id="jdBtn" onclick="analyzeJd()">
+              <span id="jdBtnLabel">Analyze Job Description</span>
+              <span id="jdSpinner" class="loader hidden"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="jdResultArea" class="hidden">
+          <div class="stats-row">
+            <div class="stat-card">
+              <span class="stat-title">Candidate Match Rate</span>
+              <div class="stat-val" id="matchRateVal">0%</div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Detected Skills</span>
+              <div class="stat-val" id="detectedCount">0</div>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="sub-panel">
+              <h3>Matched Competencies</h3>
+              <div id="matchedSkillsTags" class="tag-cloud"></div>
+            </div>
+            <div class="sub-panel">
+              <h3>Skills to Highlight / Gap Areas</h3>
+              <div id="missingSkillsTags" class="tag-cloud"></div>
+            </div>
+          </div>
+
+          <div class="result-box" style="margin-top:20px;">
+            <div class="result-top">
+              <span class="result-badge">Strategic Positioning Plan</span>
+            </div>
+            <div id="jdAdviceOutput" class="markdown-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Mock Interview -->
+    <section class="tab-pane" id="tab-interview">
+      <div class="panel glass-panel">
+        <div class="panel-header">
+          <h2>FAANG-Grade Mock Interview Simulator</h2>
+          <p>Generate role-specific interview questions and receive rigorous hiring-manager feedback on your answers.</p>
+        </div>
+
+        <div class="role-selector">
+          <input type="text" id="interviewRole" placeholder="Target Role (e.g. AI Engineer, Fullstack Python Developer, Cloud Solutions Architect)" value="AI & Machine Learning Engineer">
+          <button class="btn btn-action" id="startInterviewBtn" onclick="startInterview()">
+            <span id="interviewBtnLabel">Generate Questions</span>
+            <span id="interviewSpinner" class="loader hidden"></span>
+          </button>
+        </div>
+
+        <div id="questionListArea" class="hidden">
+          <h3 style="margin-bottom:12px; font-size:1.1rem;">Select a Question to Practice:</h3>
+          <div id="questionsContainer" class="question-list"></div>
+
+          <div class="answer-box-container" id="answerBoxArea" style="margin-top:24px;">
+            <label style="font-weight:700; margin-bottom:8px; display:block;">Your Answer:</label>
+            <textarea id="userAnswerInput" placeholder="Type your response or bullet points here (use STAR framework where applicable)..." rows="5"></textarea>
+            <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+              <button class="btn btn-action" id="evalBtn" onclick="evaluateAnswer()">
+                <span id="evalBtnLabel">Submit Answer for Critique</span>
+                <span id="evalSpinner" class="loader hidden"></span>
+              </button>
+            </div>
+          </div>
+
+          <div id="evalResultCard" class="result-box hidden" style="margin-top:24px;">
+            <div class="result-top">
+              <span class="result-badge">Hiring Manager Feedback</span>
+            </div>
+            <div id="evalOutput" class="markdown-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Career Coaching -->
+    <section class="tab-pane" id="tab-coach">
+      <div class="panel glass-panel">
+        <div class="panel-header">
+          <h2>Executive Career Mentor & Roadmaps</h2>
+          <p>Ask for technical learning roadmaps, system design tactics, interview prep strategies, or career transition advice.</p>
+        </div>
+
+        <div class="prompt-chips">
+          <button class="chip" onclick="setCoachPrompt('How do I master AI Agents, LangChain, and LangGraph in 60 days?')">AI Agent Roadmap</button>
+          <button class="chip" onclick="setCoachPrompt('How should I structure my preparation for Google L5 Technical Interviews?')">Google Interview Strategy</button>
+          <button class="chip" onclick="setCoachPrompt('How do I present hackathon AI projects on my resume to stand out to FAANG recruiters?')">Resume Presentation</button>
+        </div>
+
+        <div class="input-card">
+          <textarea id="coachInput" placeholder="Ask for career advice, technical learning paths, or interview coaching..." rows="3"></textarea>
+          <div class="input-footer">
+            <button class="btn btn-action" id="coachBtn" onclick="sendCoach()">
+              <span id="coachBtnLabel">Get Coaching Plan</span>
+              <span id="coachSpinner" class="loader hidden"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="coachResultCard" class="result-box hidden">
+          <div class="result-top">
+            <span class="result-badge">Actionable Mentorship Plan</span>
+            <button class="btn-sm" onclick="copyContent('coachOutput')">Copy</button>
+          </div>
+          <div id="coachOutput" class="markdown-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>© 2025 CareerPilot AI • Engineered for Elite Technical Careers • Serverless Ready</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -75,3 +75,27 @@ Open [http://127.0.0.1:7861](http://127.0.0.1:7861) in your browser.
 python hack.py
 ```
 Open [http://127.0.0.1:7860](http://127.0.0.1:7860) in your browser.
+
+---
+
+## 🌐 Deploying to Vercel (Separately)
+
+Both applications have been converted into standalone, serverless-ready web applications with **FastAPI** backends and modern **Glassmorphism web UIs** in their respective directories:
+
+### 1. Deploy Scholarship AI Suite (`scholarship-ai-app`)
+* **Vercel Root Directory**: `scholarship-ai-app`
+* **Environment Variable**: `GROQ_API_KEY`
+* **CLI Command**:
+  ```bash
+  cd scholarship-ai-app
+  vercel
+  ```
+
+### 2. Deploy CareerPilot AI (`careerpilot-ai-app`)
+* **Vercel Root Directory**: `careerpilot-ai-app`
+* **Environment Variable**: `GROQ_API_KEY`
+* **CLI Command**:
+  ```bash
+  cd careerpilot-ai-app
+  vercel
+  ```
