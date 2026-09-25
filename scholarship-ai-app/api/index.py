@@ -1,6 +1,7 @@
 import os
 import re
-from fastapi import FastAPI, HTTPException
+from urllib.parse import parse_qs
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -17,6 +18,44 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class VercelPathCorrectionMiddleware:
+    """Corrects rewritten paths in Vercel serverless functions so FastAPI routes match properly."""
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            current_path = scope.get("path", "")
+            headers = dict(scope.get("headers", []))
+            header_map = {k.decode("latin1").lower(): v.decode("latin1") for k, v in headers.items()}
+            
+            matched_path = (
+                header_map.get("x-matched-path") or 
+                header_map.get("x-forwarded-uri") or 
+                header_map.get("x-real-path")
+            )
+            
+            query_path = None
+            query_string = scope.get("query_string", b"").decode("latin1")
+            if "__path__=" in query_string:
+                qs = parse_qs(query_string)
+                if "__path__" in qs and qs["__path__"]:
+                    query_path = qs["__path__"][0]
+
+            resolved_path = None
+            if matched_path and not matched_path.endswith("index.py"):
+                resolved_path = matched_path.split("?")[0]
+            elif query_path:
+                resolved_path = query_path.split("?")[0]
+
+            if resolved_path and resolved_path != current_path:
+                scope["path"] = resolved_path
+                scope["raw_path"] = resolved_path.encode("latin1")
+
+        await self.asgi_app(scope, receive, send)
+
+app.add_middleware(VercelPathCorrectionMiddleware)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -59,7 +98,7 @@ class CalculateRequest(BaseModel):
     annual_income: float
     marks_percentage: float
     course_years: int
-    selected_documents: list[str]
+    selected_documents: list[str] = []
 
 class SopRequest(BaseModel):
     student_name: str
@@ -69,12 +108,15 @@ class SopRequest(BaseModel):
     tone: str = "Professional & Sincere"
 
 
-@app.get("/api/health")
+router = APIRouter()
+
+@router.get("/")
+@router.get("/health")
 def health():
     return {"status": "ok", "service": "Scholarship AI Suite"}
 
 
-@app.post("/api/chat")
+@router.post("/chat")
 def chat(req: ChatRequest):
     query = req.query.strip()
     if not query:
@@ -113,7 +155,7 @@ Official Scholarship Context:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/calculate")
+@router.post("/calculate")
 def calculate(req: CalculateRequest):
     is_undergrad = req.degree.strip().lower() == "undergraduate"
     income_pass = req.annual_income < 600000
@@ -152,7 +194,7 @@ def calculate(req: CalculateRequest):
     }
 
 
-@app.post("/api/generate-sop")
+@router.post("/generate-sop")
 def generate_sop(req: SopRequest):
     if not req.student_name or not req.course_name:
         raise HTTPException(status_code=400, detail="Student name and course are required.")
@@ -189,3 +231,8 @@ Key Guidelines:
         return {"sop": sop_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Mount routes both with and without /api prefix for maximum compatibility across environments
+app.include_router(router)
+app.include_router(router, prefix="/api")

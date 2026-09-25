@@ -1,7 +1,8 @@
 import os
 import ast
 import operator
-from fastapi import FastAPI, HTTPException
+from urllib.parse import parse_qs
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -18,6 +19,44 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+class VercelPathCorrectionMiddleware:
+    """Corrects rewritten paths in Vercel serverless functions so FastAPI routes match properly."""
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            current_path = scope.get("path", "")
+            headers = dict(scope.get("headers", []))
+            header_map = {k.decode("latin1").lower(): v.decode("latin1") for k, v in headers.items()}
+            
+            matched_path = (
+                header_map.get("x-matched-path") or 
+                header_map.get("x-forwarded-uri") or 
+                header_map.get("x-real-path")
+            )
+            
+            query_path = None
+            query_string = scope.get("query_string", b"").decode("latin1")
+            if "__path__=" in query_string:
+                qs = parse_qs(query_string)
+                if "__path__" in qs and qs["__path__"]:
+                    query_path = qs["__path__"][0]
+
+            resolved_path = None
+            if matched_path and not matched_path.endswith("index.py"):
+                resolved_path = matched_path.split("?")[0]
+            elif query_path:
+                resolved_path = query_path.split("?")[0]
+
+            if resolved_path and resolved_path != current_path:
+                scope["path"] = resolved_path
+                scope["raw_path"] = resolved_path.encode("latin1")
+
+        await self.asgi_app(scope, receive, send)
+
+app.add_middleware(VercelPathCorrectionMiddleware)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -66,12 +105,15 @@ class CoachRequest(BaseModel):
     question: str
 
 
-@app.get("/api/health")
+router = APIRouter()
+
+@router.get("/")
+@router.get("/health")
 def health():
     return {"status": "ok", "service": "CareerPilot AI"}
 
 
-@app.post("/api/chat")
+@router.post("/chat")
 def chat(req: ChatRequest):
     query = req.query.strip()
     if not query:
@@ -102,7 +144,7 @@ Candidate Context:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/analyze-jd")
+@router.post("/analyze-jd")
 def analyze_jd(req: JdRequest):
     jd = req.job_description.strip()
     if not jd:
@@ -111,7 +153,6 @@ def analyze_jd(req: JdRequest):
     jd_lower = jd.lower()
     found_skills = [s.title() for s in SKILLS_DATABASE if s in jd_lower]
     
-    # Candidate known skills
     candidate_skills = {"Python", "Git", "Machine Learning", "Ai", "Genai", "Rag", "Langchain", "Fastapi", "React", "Sql"}
     matching_skills = [s for s in found_skills if s in candidate_skills]
     missing_skills = [s for s in found_skills if s not in candidate_skills]
@@ -129,9 +170,9 @@ Detected Skills: {', '.join(found_skills) if found_skills else 'General software
 Matching Candidate Skills: {', '.join(matching_skills)}
 Missing / Skills to Highlight: {', '.join(missing_skills)}
 
-Provide:
-1. ATS Optimization Tip
-2. Recommended Project to Highlight
+Provide your response in 3 structured sections:
+1. Keyword & ATS Alignment Strategy
+2. Relevant Projects to Emphasize
 3. Interview Focus Area
 """
     try:
@@ -155,7 +196,7 @@ Provide:
     }
 
 
-@app.post("/api/mock-interview/start")
+@router.post("/mock-interview/start")
 def start_interview(req: InterviewStartRequest):
     role = req.role.strip() or "Software Engineer"
     client = get_groq_client()
@@ -190,7 +231,7 @@ Return ONLY a numbered list (1 to 5), with no conversational filler.
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/mock-interview/evaluate")
+@router.post("/mock-interview/evaluate")
 def evaluate_interview(req: InterviewEvalRequest):
     if not req.question or not req.answer:
         raise HTTPException(status_code=400, detail="Question and answer are required.")
@@ -225,7 +266,7 @@ Keep the formatting clean and impactful.
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/career-coach")
+@router.post("/career-coach")
 def career_coach(req: CoachRequest):
     q = req.question.strip()
     if not q:
@@ -254,3 +295,8 @@ Include:
         return {"coaching": completion.choices[0].message.content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Mount routes both with and without /api prefix for maximum compatibility across environments
+app.include_router(router)
+app.include_router(router, prefix="/api")
