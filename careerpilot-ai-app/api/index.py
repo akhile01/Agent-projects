@@ -10,7 +10,7 @@ from groq import Groq
 
 load_dotenv()
 
-app = FastAPI(title="CareerPilot AI API", version="1.0.0")
+app = FastAPI(title="NextRole AI API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -134,7 +134,7 @@ router = APIRouter()
 @router.get("/")
 @router.get("/health")
 def health():
-    return {"status": "ok", "service": "CareerPilot AI"}
+    return {"status": "ok", "service": "NextRole AI"}
 
 
 @router.post("/chat")
@@ -144,7 +144,7 @@ def chat(req: ChatRequest):
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     client = get_groq_client()
-    system_prompt = f"""You are CareerPilot AI, a professional Digital Career Assistant representing the candidate.
+    system_prompt = f"""You are NextRole AI, a professional Digital Career Assistant representing the candidate.
 Speak with confidence, professionalism, and conciseness.
 Answer questions about skills, projects, and experience using the candidate context below.
 If a question is about career advice or interviews, offer strategic guidance.

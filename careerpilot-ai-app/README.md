@@ -1,6 +1,6 @@
-# 🚀 CareerPilot AI - Digital Career Copilot (Vercel Ready)
+# 🚀 NextRole AI - Digital Career Copilot (Vercel Ready)
 
-An autonomous AI Career Copilot and interview simulator powered by **Groq Llama 3.3 70B** and **FastAPI**, designed for zero-config serverless deployment on **Vercel**.
+An autonomous AI Career Copilot and interview simulator powered by **Groq Ultra-Fast AI** and **FastAPI**, designed for zero-config serverless deployment on **Vercel**.
 
 ---
 

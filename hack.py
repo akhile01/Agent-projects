@@ -423,7 +423,7 @@ Guidelines:
                 label="Response",
                 lines=12
             ),
-            title="🚀 CareerPilot AI - Your Digital Career Assistant",
+            title="🚀 NextRole AI - Your Digital Career Assistant",
             description="AI-powered assistant with resume analysis, job matching, career coaching, mock interviews, and more. Upload your resume first for best results.",
             examples=[
                 ["Tell me about yourself"],
