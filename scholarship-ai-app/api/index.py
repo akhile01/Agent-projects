@@ -90,6 +90,30 @@ def get_groq_client():
     return Groq(api_key=key)
 
 
+def groq_chat_completion(client: Groq, messages: list[dict], temperature: float = 0.5, max_tokens: int = 800) -> str:
+    """Invokes available models on Groq with automatic fallback across supported model tiers."""
+    models = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+    last_err = None
+    for model_name in models:
+        try:
+            res = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            choice = res.choices[0].message
+            content = choice.content
+            if not content and getattr(choice, "reasoning", None):
+                content = choice.reasoning
+            if content and content.strip():
+                return content.strip()
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError(f"All Groq models failed: {str(last_err)}")
+
+
 class ChatRequest(BaseModel):
     query: str
 
@@ -132,16 +156,15 @@ Official Scholarship Context:
 """
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        answer = groq_chat_completion(
+            client=client,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
             temperature=0.3,
-            max_tokens=600,
+            max_tokens=800,
         )
-        answer = completion.choices[0].message.content
         return {
             "answer": answer,
             "sources": [
@@ -219,15 +242,12 @@ Key Guidelines:
 """
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
+        sop_text = groq_chat_completion(
+            client=client,
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=800,
+            max_tokens=900,
         )
-        sop_text = completion.choices[0].message.content
         return {"sop": sop_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

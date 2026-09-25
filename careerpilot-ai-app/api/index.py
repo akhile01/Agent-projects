@@ -88,6 +88,30 @@ def get_groq_client():
     return Groq(api_key=key)
 
 
+def groq_chat_completion(client: Groq, messages: list[dict], temperature: float = 0.5, max_tokens: int = 800) -> str:
+    """Invokes available models on Groq with automatic fallback across supported model tiers."""
+    models = ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b", "llama-3.3-70b-versatile"]
+    last_err = None
+    for model_name in models:
+        try:
+            res = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            choice = res.choices[0].message
+            content = choice.content
+            if not content and getattr(choice, "reasoning", None):
+                content = choice.reasoning
+            if content and content.strip():
+                return content.strip()
+        except Exception as e:
+            last_err = e
+            continue
+    raise RuntimeError(f"All Groq models failed: {str(last_err)}")
+
+
 class ChatRequest(BaseModel):
     query: str
 
@@ -130,16 +154,16 @@ Candidate Context:
 """
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        response_text = groq_chat_completion(
+            client=client,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
             temperature=0.6,
-            max_tokens=600,
+            max_tokens=700,
         )
-        return {"response": completion.choices[0].message.content}
+        return {"response": response_text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -176,13 +200,12 @@ Provide your response in 3 structured sections:
 3. Interview Focus Area
 """
     try:
-        res = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        advice = groq_chat_completion(
+            client=client,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.4,
-            max_tokens=500,
+            max_tokens=600,
         )
-        advice = res.choices[0].message.content
     except Exception:
         advice = "Focus your resume on demonstrating quantifiable impact with the required skills."
 
@@ -212,13 +235,12 @@ Include:
 Return ONLY a numbered list (1 to 5), with no conversational filler.
 """
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        raw_text = groq_chat_completion(
+            client=client,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
-            max_tokens=500,
+            max_tokens=700,
         )
-        raw_text = completion.choices[0].message.content
         questions = []
         for line in raw_text.split("\n"):
             line = line.strip()
@@ -255,13 +277,13 @@ Provide an honest, constructive critique:
 Keep the formatting clean and impactful.
 """
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        evaluation = groq_chat_completion(
+            client=client,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5,
-            max_tokens=700,
+            max_tokens=850,
         )
-        return {"evaluation": completion.choices[0].message.content}
+        return {"evaluation": evaluation}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -286,13 +308,13 @@ Include:
 4. Recommended Books/Resources/Certifications
 """
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+        coaching = groq_chat_completion(
+            client=client,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.6,
-            max_tokens=750,
+            max_tokens=850,
         )
-        return {"coaching": completion.choices[0].message.content}
+        return {"coaching": coaching}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
